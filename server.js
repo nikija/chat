@@ -1,36 +1,21 @@
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const app = require('express')()
+const server = require('http').Server(app)
+const io = require('socket.io')(server)
 
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html')
+})
 
-// Add middleware to console log every request
-app.use(function(req, res, next) {
-  console.log(req.method, req.url);
-  next(); 
-});
+io.on('connection', socket => {
+  socket.on('chat message', msg => {
+    io.emit('chat message', msg)
+  })
 
+  socket.on('disconnect', () => {
+    console.log('user disconnected')
+  })
+})
 
-// app.get('/', function(req, res){
-// res.sendFile(__dirname + '/public/index.html');
-// });
-
-app.use(express.static('public'));
-
-//We can see a messge that a user is connected when one does so
-//We are listening for 'chat message' events and sending received to everybody connected to the socket
-//if a user disconects, we get the message
-io.on('connection', function(socket){
-  console.log('user connected');
-  socket.on('chat message', function(msg){
-    io.emit('chat message', msg);
-  });
-  socket.on('disconnect', function(){
-    console.log('user disconnected');
-  });
-});
-
-//Listening
-http.listen(3000, function(){
-  console.log('Magic happens on port 3000');
-});
+server.listen(4000, () => {
+  console.log('The server is running: http://localhost:4000')
+})
